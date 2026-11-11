@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ledgerpro_test
+    username: ledgerpro_user
+    password: Contable
