@@ -7,6 +7,10 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.List;
@@ -48,6 +52,24 @@ public class ManejadorGlobalExcepciones {
     public ResponseEntity<ErrorRespuesta> inesperado(Exception ex) {
         log.error("Error inesperado", ex);
         return construir(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor", List.of());
+    }
+    // 400: falta un parámetro o tiene formato incorrecto (por ejemplo, una fecha mal escrita)
+    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    public ResponseEntity<ErrorRespuesta> parametroInvalido(Exception ex) {
+        return construir(HttpStatus.BAD_REQUEST,
+                "Parámetros ausentes o con formato incorrecto (las fechas van como AAAA-MM-DD)", List.of());
+    }
+
+    // 404: la URL no existe
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorRespuesta> rutaInexistente(NoResourceFoundException ex) {
+        return construir(HttpStatus.NOT_FOUND, "Recurso no encontrado", List.of());
+    }
+
+    // 405: el método HTTP no está permitido en esa URL
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorRespuesta> metodoNoPermitido(HttpRequestMethodNotSupportedException ex) {
+        return construir(HttpStatus.METHOD_NOT_ALLOWED, "Método HTTP no permitido para esta ruta", List.of());
     }
 
     private ResponseEntity<ErrorRespuesta> construir(HttpStatus estado, String mensaje, List<String> detalles) {
